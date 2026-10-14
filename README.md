@@ -11,9 +11,9 @@ GitHubの公開リポジトリと標準GitHub Actionsランナーを使います
    .githubフォルダは隠しフォルダなのでアップロード漏れに注意してください。
    config.jsonにはメールアドレス・パスワードを入力しないでください。
 3. Settings → Secrets and variables → Actions → New repository secretで設定。
-   SMTP_USER：送信元Gmail
-   SMTP_PASSWORD：そのGmailで発行したアプリパスワード（通常のパスワードではありません）
-   NOTIFY_TO：通知先Gmail
+   TENNISU：送信元Gmail
+   TENISU3：そのGmailで発行したアプリパスワード（通常のパスワードではありません）
+   TENISU2：通知先Gmail
    アプリパスワードにはGoogleの2段階認証が必要です。一部アカウントでは利用不可です。
    パスワードはチャット・公開ファイル・コメントに書かないでください。
 4. Actions → Tennis night availability → Run workflowで動作確認。
@@ -37,6 +37,6 @@ https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-t
 https://support.google.com/accounts/answer/185833?hl=ja
 
 現在の検証：サイト12面の手動確認、構文、通知判定は確認済み。
-クラウド実行・メール送信は未検証。初回実行で動作確認が必要です。
+2026年10月14日、クラウドから12面取得とGmailテストメール送信の成功を確認済み。
 
 開始手順追加：Actionsでmode=checkを実行して12面取得を確認。Secrets登録後mode=test-emailで送信テスト。最後にSettings → Secrets and variables → Actions → VariablesへMONITOR_ENABLED=trueを登録すると定期監視が有効になります。
