@@ -37,6 +37,9 @@ def scan():
         page = browser.new_page()
         page.set_default_timeout(30000)
         def link(name):
+            current = datetime.now(JST)
+            if current.hour >= 18 or current.date().isoformat() != WATCH_DATE:
+                raise RuntimeError('18時以降または対象日終了のため確認終了')
             page.get_by_role('link', name=name, exact=True).click()
         page.goto(ENTRY)
         link('施設空き状況')
