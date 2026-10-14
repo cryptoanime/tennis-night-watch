@@ -1,5 +1,8 @@
 name: Tennis night availability
 on:
+  push:
+    branches: [main]
+    paths: ['watch.py', 'requirements.txt', '.github/workflows/watch.yml']
   schedule:
     # UTC 00:00-11:59 = 日本時間09:00-20:59。各時刻2,7,12...57分。
     - cron: '2-59/5 0-11 * * *'
@@ -20,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   check:
-    if: github.event_name == 'workflow_dispatch' || vars.MONITOR_ENABLED == 'true'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || vars.MONITOR_ENABLED == 'true'
     # 公開リポジトリの標準ランナーを使用。
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -44,7 +47,7 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
-          RUN_MODE: ${{ inputs.mode || 'monitor' }}
+          RUN_MODE: ${{ github.event_name == 'push' && 'check' || inputs.mode || 'monitor' }}
         run: |
           case "$RUN_MODE" in
             check) python watch.py --once ;;

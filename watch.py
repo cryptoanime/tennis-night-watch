@@ -54,7 +54,7 @@ def scan():
             page.get_by_role('combobox').nth(1).select_option(label=f'{date.day:02}')
             button.click()
             page.get_by_role('heading', name='空き情報', exact=True).wait_for(state='visible')
-            text = page.locator('main').inner_text()
+            text = page.locator('body').inner_text()
             expected = rf'{date.year}\s*年\s*{date.month}\s*月\s*{date.day}\s*日'
             if name not in text or not re.search(expected, text):
                 raise RuntimeError('対象コート・日付の確認に失敗しました')
