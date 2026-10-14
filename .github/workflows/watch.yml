@@ -4,8 +4,9 @@ on:
     branches: [main]
     paths: ['watch.py', 'requirements.txt', '.github/workflows/watch.yml']
   schedule:
-    # UTC 00:00-11:59 = 日本時間09:00-17:59。各時刻2,7,12...57分。
+    # 日本時間09:02〜17:57、18:02・18:07。対象日・終了時刻で制限。
     - cron: '2-59/5 0-8 * * *'
+    - cron: '2,7 9 * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -41,12 +42,12 @@ jobs:
           import os
           from datetime import datetime
           from zoneinfo import ZoneInfo
-          from watch import WATCH_DATE
+          from watch import monitoring_active
           now = datetime.now(ZoneInfo('Asia/Tokyo'))
-          active = os.environ['RUN_MODE'] == 'test-email' or (now.date().isoformat() == WATCH_DATE and now.hour < 18)
+          active = os.environ['RUN_MODE'] == 'test-email' or monitoring_active(now)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('active=' + str(active).lower() + '\n')
-          print('本日の18時まで監視対象' if active else '監視停止：サイトへの確認は行いません')
+          print('本日の指定終了時刻まで監視対象' if active else '監視停止：サイトへの確認は行いません')
           PY
       - name: Restore last result
         if: steps.gate.outputs.active == 'true'
