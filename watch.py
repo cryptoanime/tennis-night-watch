@@ -13,6 +13,12 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent
 JST = timezone(timedelta(hours=9))
 WATCH_DATE = '2026-10-14'
+WATCH_END_MINUTES = 18 * 60 + 10
+
+
+def monitoring_active(now):
+    return now.date().isoformat() == WATCH_DATE and now.hour * 60 + now.minute < WATCH_END_MINUTES
+
 ENTRY = 'https://www.e-shisetsu.e-aichi.jp/sp/index.jsp'
 
 
@@ -29,8 +35,8 @@ def atomic_save(path, data):
 def scan():
     from playwright.sync_api import sync_playwright
     now = datetime.now(JST)
-    if now.date().isoformat() != WATCH_DATE or now.hour >= 18:
-        raise RuntimeError('監視対象日ではないか18時以降のため確認終了')
+    if not monitoring_active(now):
+        raise RuntimeError('監視対象日ではないか終了時刻以降のため確認終了')
     date = now.date()
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -38,8 +44,8 @@ def scan():
         page.set_default_timeout(30000)
         def link(name):
             current = datetime.now(JST)
-            if current.hour >= 18 or current.date().isoformat() != WATCH_DATE:
-                raise RuntimeError('18時以降または対象日終了のため確認終了')
+            if not monitoring_active(current):
+                raise RuntimeError('終了時刻以降または対象日終了のため確認終了')
             page.get_by_role('link', name=name, exact=True).click()
         page.goto(ENTRY)
         link('施設空き状況')
@@ -119,7 +125,7 @@ def main():
         try:
             # 夜間終了後は監視しない。開始・終了時間は設定変更可。
             hour = datetime.now(JST).hour
-            if datetime.now(JST).date().isoformat() != WATCH_DATE or hour >= 18:
+            if not monitoring_active(datetime.now(JST)):
                 if opt.scheduled or opt.once:
                     return
                 time.sleep(60)
@@ -130,7 +136,7 @@ def main():
                 return
             old = state.get('courts', {}) if state.get('date') == day else {}
             available = changed(old, courts)
-            if available and datetime.now(JST).date().isoformat() == day and datetime.now(JST).hour < 18:
+            if available and datetime.now(JST).date().isoformat() == day and monitoring_active(datetime.now(JST)):
                 body = f'豊川公園庭球場\n{day}\n夜間に空きが出ました。\nコート：' + '、'.join(available)
                 body += '\n確認時刻：' + datetime.now(JST).strftime('%Y/%m/%d %H:%M:%S')
                 body += '\n予約サイト：' + ENTRY + '\n空きは確認時点の情報です。予約前に再確認してください。'
