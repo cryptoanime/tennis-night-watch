@@ -104,6 +104,7 @@ def main():
     args.add_argument('--once', action='store_true', help='1回確認し表示のみ。メール・状態更新なし')
     args.add_argument('--test-email', action='store_true', help='テストメールを1通送る')
     args.add_argument('--scheduled', action='store_true', help='クラウド用：確認・通知を1回実行して終了')
+    args.add_argument('--minute-watch', action='store_true', help='対象日の終了時刻まで1分間隔で監視')
     opt = args.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     config = json.loads((BASE / 'config.json').read_text(encoding='utf-8'))
@@ -118,7 +119,7 @@ def main():
         raise SystemExit('config.json のメール設定を入力してください。パスワードはチャットに送らないでください。')
     state_path = BASE / 'state.json'
     state = json.loads(state_path.read_text(encoding='utf-8')) if state_path.exists() else {}
-    interval = max(300, int(config.get('interval_seconds', 300)))
+    interval = 60 if opt.minute_watch else max(300, int(config.get('interval_seconds', 300)))
     failures = 0
     while True:
         start = time.monotonic()
@@ -126,7 +127,7 @@ def main():
             # 夜間終了後は監視しない。開始・終了時間は設定変更可。
             hour = datetime.now(JST).hour
             if not monitoring_active(datetime.now(JST)):
-                if opt.scheduled or opt.once:
+                if opt.scheduled or opt.once or opt.minute_watch:
                     return
                 time.sleep(60)
                 continue
