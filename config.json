@@ -1,0 +1,10 @@
+{
+  "interval_seconds": 300,
+  "monitor_start_hour": 0,
+  "monitor_end_hour": 21,
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_password": "",
+  "notify_to": ""
+}
