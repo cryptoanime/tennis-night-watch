@@ -17,6 +17,7 @@ on:
           - check
           - test-email
           - monitor
+          - minute-watch
 permissions:
   contents: read
 concurrency:
@@ -27,7 +28,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || vars.MONITOR_ENABLED == 'true'
     # 公開リポジトリの標準ランナーを使用。
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -73,10 +74,11 @@ jobs:
             check) python watch.py --once ;;
             test-email) python watch.py --test-email ;;
             monitor) python watch.py --scheduled ;;
+            minute-watch) python watch.py --minute-watch ;;
             *) exit 1 ;;
           esac
       - name: Save last result
-        if: success() && steps.gate.outputs.active == 'true' && github.event_name != 'push' && (github.event_name == 'schedule' || inputs.mode == 'monitor')
+        if: success() && steps.gate.outputs.active == 'true' && github.event_name != 'push' && (github.event_name == 'schedule' || inputs.mode == 'monitor' || inputs.mode == 'minute-watch')
         uses: actions/cache/save@v4
         with:
           path: state.json
