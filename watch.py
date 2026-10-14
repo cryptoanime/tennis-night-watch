@@ -12,6 +12,7 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
 JST = timezone(timedelta(hours=9))
+WATCH_DATE = '2026-10-14'
 ENTRY = 'https://www.e-shisetsu.e-aichi.jp/sp/index.jsp'
 
 
@@ -27,7 +28,10 @@ def atomic_save(path, data):
 
 def scan():
     from playwright.sync_api import sync_playwright
-    date = datetime.now(JST).date()
+    now = datetime.now(JST)
+    if now.date().isoformat() != WATCH_DATE or now.hour >= 18:
+        raise RuntimeError('監視対象日ではないか18時以降のため確認終了')
+    date = now.date()
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -112,8 +116,8 @@ def main():
         try:
             # 夜間終了後は監視しない。開始・終了時間は設定変更可。
             hour = datetime.now(JST).hour
-            if not opt.once and not config.get('monitor_start_hour', 0) <= hour < config.get('monitor_end_hour', 21):
-                if opt.scheduled:
+            if datetime.now(JST).date().isoformat() != WATCH_DATE or hour >= 18:
+                if opt.scheduled or opt.once:
                     return
                 time.sleep(60)
                 continue
@@ -123,7 +127,7 @@ def main():
                 return
             old = state.get('courts', {}) if state.get('date') == day else {}
             available = changed(old, courts)
-            if available:
+            if available and datetime.now(JST).date().isoformat() == day and datetime.now(JST).hour < 18:
                 body = f'豊川公園庭球場\n{day}\n夜間に空きが出ました。\nコート：' + '、'.join(available)
                 body += '\n確認時刻：' + datetime.now(JST).strftime('%Y/%m/%d %H:%M:%S')
                 body += '\n予約サイト：' + ENTRY + '\n空きは確認時点の情報です。予約前に再確認してください。'
