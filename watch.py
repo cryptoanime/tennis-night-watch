@@ -13,7 +13,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent
 JST = timezone(timedelta(hours=9))
 WATCH_DATE = '2026-10-14'
-WATCH_END_MINUTES = 18 * 60 + 30
+WATCH_END_MINUTES = 19 * 60
 
 
 def monitoring_active(now):
